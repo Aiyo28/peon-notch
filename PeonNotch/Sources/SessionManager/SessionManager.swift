@@ -54,7 +54,7 @@ class SessionManager: ObservableObject {
             let session = AgentSession(
                 id: sessionID,
                 pid: pid,
-                character: character.isEmpty ? "peon" : character,
+                character: character.isEmpty ? AppSettings.shared.nextCharacter(available: CharacterRegistry.shared.availableNames()) : character,
                 status: .working,
                 message: message,
                 lastUpdated: Date()
