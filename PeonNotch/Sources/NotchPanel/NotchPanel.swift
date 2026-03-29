@@ -68,8 +68,12 @@ class NotchPanel {
         if viewModel.isOpen { viewModel.close() } else { viewModel.open() }
     }
 
-    func expandBriefly(seconds: TimeInterval = 4) {
-        viewModel.open(sessionCount: sessionManager.sessions.count)
+    func expandBriefly(forSession sessionID: String? = nil, seconds: TimeInterval = 4) {
+        if let sessionID {
+            viewModel.openForNotification(sessionID: sessionID, totalSessions: sessionManager.sessions.count)
+        } else {
+            viewModel.open(sessionCount: sessionManager.sessions.count)
+        }
         autoCollapseTimer?.invalidate()
         autoCollapseTimer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self] _ in
             self?.viewModel.close()
@@ -77,9 +81,10 @@ class NotchPanel {
     }
 
     @objc private func handleSessionEvent(_ notification: Notification) {
-        guard let event = notification.userInfo?["event"] as? String else { return }
+        guard let event = notification.userInfo?["event"] as? String,
+              let sessionID = notification.userInfo?["sessionID"] as? String else { return }
         if event != "session.end" {
-            expandBriefly()
+            expandBriefly(forSession: sessionID)
         }
     }
 
@@ -119,14 +124,23 @@ class NotchPanel {
 
 // MARK: - ViewModel
 
+enum NotchDisplayMode {
+    case all            // manual click — show everything
+    case notification   // auto-expand — show only triggered sessions
+}
+
 class NotchViewModel: ObservableObject {
     @Published var isOpen = false
     @Published var notchWidth: CGFloat
     @Published var notchHeight: CGFloat
+    @Published var displayMode: NotchDisplayMode = .all
+    @Published var notificationSessionIDs: Set<String> = []
 
     let closedWidth: CGFloat
     let closedHeight: CGFloat
     var sessionCount: Int = 0
+
+    private let notificationWindow: TimeInterval = 3  // stack window
 
     init(screen: NSScreen) {
         let leftPad = screen.auxiliaryTopLeftArea?.width ?? 0
@@ -137,29 +151,36 @@ class NotchViewModel: ObservableObject {
         notchHeight = closedHeight
     }
 
-    /// Adaptive sizing based on session count
-    private var openWidth: CGFloat {
-        switch sessionCount {
-        case 0:      return 300       // empty state — compact
-        case 1:      return 200       // single card
-        case 2:      return 340       // two cards side by side
-        case 3:      return 480       // three cards in a row
-        case 4...6:  return 480       // two rows of 3
-        default:     return 560       // 7+ grid
-        }
-    }
+    private let rowHeight: CGFloat = 64
+    private let topPadding: CGFloat = 40
+
+    private var openWidth: CGFloat { 420 }
 
     private var openHeight: CGFloat {
-        switch sessionCount {
-        case 0:      return 120       // empty state
-        case 1...3:  return 140       // single row
-        case 4...6:  return 250       // two rows
-        default:     return 340       // 3+ rows
-        }
+        let count = max(visibleCount, 1)
+        let rows = CGFloat(min(count, 9))
+        return topPadding + (rows * rowHeight) + 16
     }
 
+    private var visibleCount: Int {
+        displayMode == .notification ? notificationSessionIDs.count : sessionCount
+    }
+
+    /// Manual open — show all sessions
     func open(sessionCount: Int = 0) {
         self.sessionCount = sessionCount
+        displayMode = .all
+        notificationSessionIDs.removeAll()
+        isOpen = true
+        notchWidth = openWidth
+        notchHeight = openHeight
+    }
+
+    /// Auto-expand for a specific session notification
+    func openForNotification(sessionID: String, totalSessions: Int) {
+        sessionCount = totalSessions
+        notificationSessionIDs.insert(sessionID)
+        displayMode = .notification
         isOpen = true
         notchWidth = openWidth
         notchHeight = openHeight
@@ -167,6 +188,8 @@ class NotchViewModel: ObservableObject {
 
     func close() {
         isOpen = false
+        displayMode = .all
+        notificationSessionIDs.removeAll()
         notchWidth = closedWidth
         notchHeight = closedHeight
     }

@@ -1,13 +1,9 @@
 import SwiftUI
 
-// MARK: - Root View
-
 struct NotchRootView: View {
     @ObservedObject var viewModel: NotchViewModel
     @ObservedObject var sessionManager: SessionManager
     let onSessionClick: (AgentSession) -> Void
-
-    @State private var isHovering = false
 
     private var topRadius: CGFloat { viewModel.isOpen ? 19 : 6 }
     private var bottomRadius: CGFloat { viewModel.isOpen ? 24 : 14 }
@@ -37,7 +33,6 @@ struct NotchRootView: View {
                         }
                     }
                 }
-                .onHover { isHovering = $0 }
                 .animation(viewModel.isOpen ? openAnimation : closeAnimation, value: viewModel.notchWidth)
                 .animation(viewModel.isOpen ? openAnimation : closeAnimation, value: viewModel.notchHeight)
                 .animation(viewModel.isOpen ? openAnimation : closeAnimation, value: topRadius)
@@ -70,8 +65,6 @@ struct NotchRootView: View {
         }
     }
 
-    // MARK: - Collapsed
-
     private var collapsedContent: some View {
         HStack(spacing: 6) {
             if !sessionManager.sessions.isEmpty {
@@ -85,79 +78,49 @@ struct NotchRootView: View {
         .padding(.top, 4)
     }
 
-    // MARK: - Expanded
-
     private var expandedContent: some View {
         VStack(spacing: 0) {
-            if sessionManager.sessions.isEmpty {
+            if visibleSessions.isEmpty {
                 emptyState
             } else {
-                adaptiveLayout
+                sessionList
             }
         }
-        .padding(.top, 8)
+        .padding(.top, 36)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 6) {
+        HStack(spacing: 10) {
             Image(systemName: "person.3.fill")
-                .font(.system(size: 22))
+                .font(.system(size: 18))
                 .foregroundStyle(.white.opacity(0.2))
             Text("No active sessions")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 13))
                 .foregroundStyle(.white.opacity(0.4))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Adaptive layout: horizontal row for 1-3, two rows for 4-6, grid for 7+
-    @ViewBuilder
-    private var adaptiveLayout: some View {
-        let sessions = Array(sessionManager.sessions.prefix(9))
-        let count = sessions.count
+    private var visibleSessions: [AgentSession] {
+        switch viewModel.displayMode {
+        case .all:
+            return Array(sessionManager.sessions.prefix(9))
+        case .notification:
+            return sessionManager.sessions.filter {
+                viewModel.notificationSessionIDs.contains($0.id)
+            }
+        }
+    }
 
-        if count <= 3 {
-            // Single horizontal row — compact
-            HStack(spacing: 10) {
-                ForEach(sessions) { session in
-                    CompactCard(session: session)
+    private var sessionList: some View {
+        ScrollView {
+            VStack(spacing: 4) {
+                ForEach(visibleSessions) { session in
+                    SessionRow(session: session)
                         .onTapGesture { onSessionClick(session) }
                 }
-            }
-            .padding(.horizontal, 16)
-            .frame(maxHeight: .infinity)
-        } else if count <= 6 {
-            // Two rows of up to 3
-            let row1 = Array(sessions.prefix(3))
-            let row2 = Array(sessions.dropFirst(3))
-            VStack(spacing: 8) {
-                HStack(spacing: 10) {
-                    ForEach(row1) { session in
-                        CompactCard(session: session)
-                            .onTapGesture { onSessionClick(session) }
-                    }
-                }
-                HStack(spacing: 10) {
-                    ForEach(row2) { session in
-                        CompactCard(session: session)
-                            .onTapGesture { onSessionClick(session) }
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .frame(maxHeight: .infinity)
-        } else {
-            // 7+ compact grid
-            let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 8) {
-                    ForEach(sessions) { session in
-                        MiniCard(session: session)
-                            .onTapGesture { onSessionClick(session) }
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 8)
             }
         }
     }
@@ -172,80 +135,63 @@ struct NotchRootView: View {
     }
 }
 
-// MARK: - Compact Card (1-6 agents, horizontal layout)
+// MARK: - Session Row
 
-struct CompactCard: View {
+struct SessionRow: View {
     let session: AgentSession
+    @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
+            // Portrait
             Image(nsImage: CharacterRegistry.shared.portrait(for: session.character))
                 .resizable()
                 .interpolation(.none)
-                .frame(width: 40, height: 40)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .frame(width: 44, height: 44)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: 8)
                         .strokeBorder(statusColor, lineWidth: 2)
                 )
 
+            // Name + status
             VStack(alignment: .leading, spacing: 2) {
-                Text(session.character)
-                    .font(.system(size: 11, weight: .semibold))
+                Text(session.character.capitalized)
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white)
-                    .lineLimit(1)
 
                 Text(session.message.isEmpty ? session.status.label : session.message)
-                    .font(.system(size: 9))
+                    .font(.system(size: 11))
                     .foregroundStyle(.white.opacity(0.5))
                     .lineLimit(1)
             }
+
+            Spacer()
+
+            // Status pill
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(statusColor)
+                    .frame(width: 7, height: 7)
+                Text(session.status.label)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(statusColor)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(statusColor.opacity(0.15))
+            )
         }
-        .padding(8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(.white.opacity(0.08))
+                .fill(.white.opacity(isHovered ? 0.12 : 0.07))
         )
-    }
-
-    private var statusColor: Color {
-        switch session.status {
-        case .working: return .green
-        case .idle: return .gray
-        case .error: return .red
-        case .inputRequired: return .yellow
-        }
-    }
-}
-
-// MARK: - Mini Card (7+ agents, grid layout)
-
-struct MiniCard: View {
-    let session: AgentSession
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(nsImage: CharacterRegistry.shared.portrait(for: session.character))
-                .resizable()
-                .interpolation(.none)
-                .frame(width: 32, height: 32)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .strokeBorder(statusColor, lineWidth: 1.5)
-                )
-
-            Text(session.character)
-                .font(.system(size: 8, weight: .medium))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(6)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.white.opacity(0.06))
-        )
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.15), value: isHovered)
     }
 
     private var statusColor: Color {
