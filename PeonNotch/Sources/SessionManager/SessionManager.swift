@@ -38,7 +38,7 @@ class SessionManager: ObservableObject {
     @Published var sessions: [AgentSession] = []
 
     private var heartbeatTimer: Timer?
-    private let heartbeatInterval: TimeInterval = 30
+    private let heartbeatInterval: TimeInterval = 10
 
     private init() {
         startHeartbeat()

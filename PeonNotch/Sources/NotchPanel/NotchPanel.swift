@@ -152,14 +152,18 @@ class NotchViewModel: ObservableObject {
     }
 
     private let rowHeight: CGFloat = 64
+    private let editPanelHeight: CGFloat = 130
     private let topPadding: CGFloat = 40
+
+    @Published var isEditingSession = false
 
     private var openWidth: CGFloat { 540 }
 
     private var openHeight: CGFloat {
         let count = max(visibleCount, 1)
         let rows = CGFloat(min(count, 9))
-        return topPadding + (rows * rowHeight) + 16
+        let editExtra: CGFloat = isEditingSession ? editPanelHeight : 0
+        return topPadding + (rows * rowHeight) + 16 + editExtra
     }
 
     private var visibleCount: Int {

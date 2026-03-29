@@ -92,7 +92,7 @@ struct NotchRootView: View {
                 .padding(.trailing, 4)
                 .padding(.top, 2)
             }
-            .padding(.top, 30)
+            .padding(.top, 14)
             .padding(.horizontal, 16)
 
             if visibleSessions.isEmpty {
@@ -213,33 +213,48 @@ struct SessionRow: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
 
-            // Inline edit panel
             if isEditing {
-                VStack(spacing: 8) {
-                    HStack {
-                        TextField("Name", text: $editName)
-                            .textFieldStyle(.roundedBorder)
-                            .font(.system(size: 12))
-                            .onSubmit { applyChanges() }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Edit Session")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.4))
 
+                    TextField("Name", text: $editName)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 12))
+                        .onSubmit { applyChanges() }
+
+                    HStack {
+                        Text("Character")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.white.opacity(0.5))
+                        Spacer()
                         Picker("", selection: $editCharacter) {
                             ForEach(CharacterRegistry.shared.availableNames(), id: \.self) { name in
-                                HStack {
-                                    Image(nsImage: CharacterRegistry.shared.portrait(for: name))
-                                        .resizable()
-                                        .frame(width: 16, height: 16)
-                                    Text(CharacterRegistry.shared.packs[name]?.name ?? name)
-                                }
-                                .tag(name)
+                                Text(CharacterRegistry.shared.packs[name]?.name ?? name)
+                                    .tag(name)
                             }
                         }
-                        .frame(width: 150)
+                        .frame(width: 160)
+                    }
 
+                    HStack {
+                        Spacer()
+                        Button("Cancel") {
+                            withAnimation { isEditing = false }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                         Button("Apply") { applyChanges() }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
                     }
                 }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.white.opacity(0.05))
+                )
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
                 .transition(.opacity.combined(with: .move(edge: .top)))
