@@ -4,22 +4,37 @@ struct CharactersSettingsView: View {
     @State private var selectedPack: String?
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
 
-    private var packs: [CharacterPack] {
-        CharacterRegistry.shared.packs.values.sorted { $0.id < $1.id }
+    private var groupedPacks: [(PackCategory, [CharacterPack])] {
+        let all = CharacterRegistry.shared.packs.values
+        let grouped = Dictionary(grouping: all) { $0.category }
+        return grouped
+            .sorted { $0.key < $1.key }
+            .map { ($0.key, $0.value.sorted { $0.name < $1.name }) }
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Pack grid
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(packs) { pack in
-                        PackCard(
-                            pack: pack,
-                            isSelected: selectedPack == pack.id,
-                            isDefault: AppSettings.shared.defaultCharacter == pack.id
-                        )
-                        .onTapGesture { selectedPack = pack.id }
+                VStack(alignment: .leading, spacing: 20) {
+                    ForEach(groupedPacks, id: \.0) { category, packs in
+                        VStack(alignment: .leading, spacing: 8) {
+                            // Category header
+                            Text(category.rawValue)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.6))
+                                .padding(.leading, 4)
+
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                ForEach(packs) { pack in
+                                    PackCard(
+                                        pack: pack,
+                                        isSelected: selectedPack == pack.id,
+                                        isDefault: AppSettings.shared.defaultCharacter == pack.id
+                                    )
+                                    .onTapGesture { selectedPack = pack.id }
+                                }
+                            }
+                        }
                     }
                 }
                 .padding(16)
@@ -27,7 +42,6 @@ struct CharactersSettingsView: View {
 
             Divider()
 
-            // Bottom bar
             HStack {
                 Button("Open Characters Folder") {
                     let path = NSHomeDirectory() + "/Documents/Developer/peon-notch/characters"
@@ -55,7 +69,7 @@ struct PackCard: View {
     let isDefault: Bool
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Image(nsImage: pack.portrait)
                 .resizable()
                 .interpolation(.none)
@@ -67,7 +81,7 @@ struct PackCard: View {
                 )
 
             Text(pack.name)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.white)
                 .lineLimit(1)
 
@@ -80,7 +94,6 @@ struct PackCard: View {
                     .background(Capsule().fill(.green.opacity(0.15)))
             }
 
-            // Preview sound button
             Button(action: {
                 SoundEngine.shared.play(event: "session.start", character: pack.id)
             }) {

@@ -4,6 +4,19 @@ struct CharacterPack: Identifiable {
     let id: String
     let name: String
     let portrait: NSImage
+    let category: PackCategory
+}
+
+enum PackCategory: String, CaseIterable, Comparable {
+    case warcraft = "Warcraft"
+    case starcraft = "StarCraft"
+    case movies = "Movies & TV"
+    case games = "Other Games"
+
+    static func < (lhs: PackCategory, rhs: PackCategory) -> Bool {
+        let order: [PackCategory] = [.warcraft, .starcraft, .movies, .games]
+        return (order.firstIndex(of: lhs) ?? 0) < (order.firstIndex(of: rhs) ?? 0)
+    }
 }
 
 class CharacterRegistry {
@@ -36,7 +49,9 @@ class CharacterRegistry {
             let portraitPath = (folderPath as NSString).appendingPathComponent("portrait.png")
             let portrait = NSImage(contentsOfFile: portraitPath) ?? generatePlaceholder(for: folder)
 
-            packs[folder] = CharacterPack(id: folder, name: displayName(for: folder), portrait: portrait)
+            let lang = languageTag(for: folder)
+            let name = displayName(for: folder) + (lang.isEmpty ? "" : " (\(lang))")
+            packs[folder] = CharacterPack(id: folder, name: name, portrait: portrait, category: packCategory(for: folder))
         }
     }
 
@@ -46,6 +61,25 @@ class CharacterRegistry {
 
     func availableNames() -> [String] {
         Array(packs.keys).sorted()
+    }
+
+    private func packCategory(for folder: String) -> PackCategory {
+        switch folder {
+        case let f where f.hasPrefix("sc_"): return .starcraft
+        case let f where f.hasPrefix("wc3_"): return .warcraft
+        case "peon", "peon_ru", "peasant", "peasant_ru", "grunt",
+             "acolyte_ru", "brewmaster_ru", "high_elf_builder_ru",
+             "footman", "arthas", "thrall", "jaina", "tauren_chieftain":
+            return .warcraft
+        case "arnold", "jarvis", "glados": return .movies
+        case "counterstrike", "marine": return .games
+        default: return .games
+        }
+    }
+
+    private func languageTag(for folder: String) -> String {
+        if folder.hasSuffix("_ru") { return "RU" }
+        return ""
     }
 
     private func displayName(for folder: String) -> String {
