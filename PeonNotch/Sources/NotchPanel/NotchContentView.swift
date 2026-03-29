@@ -5,7 +5,7 @@ struct NotchRootView: View {
     @ObservedObject var sessionManager: SessionManager
     let onSessionClick: (AgentSession) -> Void
 
-    private var topRadius: CGFloat { viewModel.isOpen ? 19 : 6 }
+    private var topRadius: CGFloat { viewModel.isOpen ? 0 : 6 }
     private var bottomRadius: CGFloat { viewModel.isOpen ? 24 : 14 }
 
     private var openAnimation: Animation {
@@ -92,12 +92,12 @@ struct NotchRootView: View {
     }
 
     private var emptyState: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 14) {
             Image(systemName: "person.3.fill")
-                .font(.system(size: 18))
-                .foregroundStyle(.white.opacity(0.2))
+                .font(.system(size: 36))
+                .foregroundStyle(.white.opacity(0.25))
             Text("No active sessions")
-                .font(.system(size: 13))
+                .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(.white.opacity(0.4))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -156,7 +156,7 @@ struct SessionRow: View {
 
             // Name + status
             VStack(alignment: .leading, spacing: 2) {
-                Text(session.character.capitalized)
+                Text(CharacterRegistry.shared.packs[session.character]?.name ?? session.character.capitalized)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white)
 

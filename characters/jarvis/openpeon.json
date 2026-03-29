@@ -1,0 +1,73 @@
+{
+  "cesp_version": "1.0",
+  "name": "jarvis",
+  "display_name": "J.A.R.V.I.S.",
+  "version": "1.0.0",
+  "description": "Just A Rather Very Intelligent System. Formal British AI assistant voice notifications with Daniel's voice, including Mr. Stark references.",
+  "author": {
+    "name": "Boke7",
+    "github": "Boke7"
+  },
+  "license": "MIT",
+  "language": "en-GB",
+  "tags": ["british", "formal", "ai", "marvel", "tts", "elevenlabs"],
+  "categories": {
+    "session.start": {
+      "sounds": [
+        { "file": "sounds/session_start_1.mp3", "label": "All systems online" },
+        { "file": "sounds/session_start_2.mp3", "label": "Welcome back" },
+        { "file": "sounds/session_start_3.mp3", "label": "Good to have you back, Mr. Stark" },
+        { "file": "sounds/session_start_4.mp3", "label": "Systems fully operational" }
+      ]
+    },
+    "task.acknowledge": {
+      "sounds": [
+        { "file": "sounds/task_acknowledge_1.mp3", "label": "On it" },
+        { "file": "sounds/task_acknowledge_2.mp3", "label": "Right away" },
+        { "file": "sounds/task_acknowledge_3.mp3", "label": "Processing now" },
+        { "file": "sounds/task_acknowledge_4.mp3", "label": "Of course, Mr. Stark" },
+        { "file": "sounds/task_acknowledge_5.mp3", "label": "Leave it to me" },
+        { "file": "sounds/task_acknowledge_6.mp3", "label": "As you wish, Mr. Stark" },
+        { "file": "sounds/task_acknowledge_7.mp3", "label": "Immediately, sir" }
+      ]
+    },
+    "task.complete": {
+      "sounds": [
+        { "file": "sounds/task_complete_1.mp3", "label": "Task completed" },
+        { "file": "sounds/task_complete_2.mp3", "label": "All done" },
+        { "file": "sounds/task_complete_3.mp3", "label": "Mission accomplished" },
+        { "file": "sounds/task_complete_4.mp3", "label": "Done, Mr. Stark" },
+        { "file": "sounds/task_complete_5.mp3", "label": "Taken care of" },
+        { "file": "sounds/task_complete_6.mp3", "label": "Completed without incident" }
+      ]
+    },
+    "task.error": {
+      "sounds": [
+        { "file": "sounds/task_error_1.mp3", "label": "We have a problem" },
+        { "file": "sounds/task_error_2.mp3", "label": "Error occurred" },
+        { "file": "sounds/task_error_3.mp3", "label": "Complication, Mr. Stark" },
+        { "file": "sounds/task_error_4.mp3", "label": "Review recommended" }
+      ]
+    },
+    "input.required": {
+      "sounds": [
+        { "file": "sounds/input_required_1.mp3", "label": "Input required" },
+        { "file": "sounds/input_required_2.mp3", "label": "Decision needed" },
+        { "file": "sounds/input_required_3.mp3", "label": "Attention please, Mr. Stark" },
+        { "file": "sounds/input_required_4.mp3", "label": "Your guidance needed" }
+      ]
+    },
+    "resource.limit": {
+      "sounds": [
+        { "file": "sounds/resource_limit_1.mp3", "label": "Approaching limits" },
+        { "file": "sounds/resource_limit_2.mp3", "label": "Running thin, Mr. Stark" }
+      ]
+    },
+    "user.spam": {
+      "sounds": [
+        { "file": "sounds/user_spam_1.mp3", "label": "Brief pause suggested" },
+        { "file": "sounds/user_spam_2.mp3", "label": "Rest advised, Mr. Stark" }
+      ]
+    }
+  }
+}

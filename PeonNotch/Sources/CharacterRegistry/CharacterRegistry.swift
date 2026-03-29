@@ -36,7 +36,7 @@ class CharacterRegistry {
             let portraitPath = (folderPath as NSString).appendingPathComponent("portrait.png")
             let portrait = NSImage(contentsOfFile: portraitPath) ?? generatePlaceholder(for: folder)
 
-            packs[folder] = CharacterPack(id: folder, name: folder.capitalized, portrait: portrait)
+            packs[folder] = CharacterPack(id: folder, name: displayName(for: folder), portrait: portrait)
         }
     }
 
@@ -46,6 +46,15 @@ class CharacterRegistry {
 
     func availableNames() -> [String] {
         Array(packs.keys).sorted()
+    }
+
+    private func displayName(for folder: String) -> String {
+        folder
+            .replacingOccurrences(of: "wc3_", with: "")
+            .replacingOccurrences(of: "sc_", with: "")
+            .replacingOccurrences(of: "_ru", with: "")
+            .replacingOccurrences(of: "_", with: " ")
+            .capitalized
     }
 
     private func generatePlaceholder(for name: String) -> NSImage {

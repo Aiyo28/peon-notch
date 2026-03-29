@@ -74,17 +74,26 @@ class SoundEngine {
 
     // MARK: - Private
 
+    /// Track last played per category to avoid repeats
+    private var lastPlayed: [String: String] = [:]
+
     private func findSound(event: String, character: String) -> URL? {
         let charactersDir = NSHomeDirectory() + "/Documents/Developer/peon-notch/characters"
+        let packDir = "\(charactersDir)/\(character)"
+        let category = eventCategory(event)
 
-        // Try exact event name first, then category
+        // Try manifest-based lookup first (peon-ping compatible)
+        if let url = findSoundFromManifest(packDir: packDir, category: category) {
+            return url
+        }
+
+        // Fallback: direct file match
         let candidates = [
-            "\(charactersDir)/\(character)/sounds/\(event).wav",
-            "\(charactersDir)/\(character)/sounds/\(event).mp3",
-            "\(charactersDir)/\(character)/sounds/\(eventCategory(event)).wav",
-            "\(charactersDir)/\(character)/sounds/\(eventCategory(event)).mp3",
+            "\(packDir)/sounds/\(event).wav",
+            "\(packDir)/sounds/\(event).mp3",
+            "\(packDir)/sounds/\(category).wav",
+            "\(packDir)/sounds/\(category).mp3",
         ]
-
         for path in candidates {
             if FileManager.default.fileExists(atPath: path) {
                 return URL(fileURLWithPath: path)
@@ -93,9 +102,52 @@ class SoundEngine {
         return nil
     }
 
+    private func findSoundFromManifest(packDir: String, category: String) -> URL? {
+        // Load manifest (openpeon.json or manifest.json)
+        var manifest: [String: Any]?
+        for name in ["openpeon.json", "manifest.json"] {
+            let path = "\(packDir)/\(name)"
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                manifest = json
+                break
+            }
+        }
+        guard let manifest,
+              let categories = manifest["categories"] as? [String: Any],
+              let catData = categories[category] as? [String: Any],
+              let sounds = catData["sounds"] as? [[String: Any]],
+              !sounds.isEmpty else { return nil }
+
+        // Pick random, avoiding last played
+        let lastFile = lastPlayed[category] ?? ""
+        let candidates = sounds.count > 1 ? sounds.filter { ($0["file"] as? String) != lastFile } : sounds
+        guard let pick = candidates.randomElement(),
+              let fileRef = pick["file"] as? String else { return nil }
+
+        lastPlayed[category] = fileRef
+
+        let soundPath: String
+        if fileRef.contains("/") {
+            soundPath = "\(packDir)/\(fileRef)"
+        } else {
+            soundPath = "\(packDir)/sounds/\(fileRef)"
+        }
+
+        guard FileManager.default.fileExists(atPath: soundPath) else { return nil }
+        return URL(fileURLWithPath: soundPath)
+    }
+
     private func eventCategory(_ event: String) -> String {
-        // Map events like "session.start" -> "session.start", keep as-is
-        event
+        switch event {
+        case "session.start": return "session.start"
+        case "session.end": return "session.start"  // reuse start sounds
+        case "task.complete": return "task.complete"
+        case "task.error": return "task.error"
+        case "input.required": return "input.required"
+        case "subagent.start": return "session.start"
+        default: return "task.complete"
+        }
     }
 
     private func isSpamming(event: String) -> Bool {

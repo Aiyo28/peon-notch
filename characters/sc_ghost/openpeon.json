@@ -1,0 +1,117 @@
+{
+  "cesp_version": "1.0",
+  "name": "sc_ghost",
+  "display_name": "StarCraft Ghost",
+  "version": "1.0.0",
+  "author": {
+    "name": "kschmidtjr1",
+    "github": "kschmidtjr1"
+  },
+  "license": "CC-BY-NC-4.0",
+  "language": "en",
+  "categories": {
+    "session.start": {
+      "sounds": [
+        {
+          "file": "sounds/SomebodyCallForAnExterminator.mp3",
+          "label": "Somebody call for an exterminator?",
+          "sha256": "42e44b4e53b47ffb2386d49e0cf553141ef4ae9a7f33956fd978f26ebde51df0"
+        }
+      ]
+    },
+    "task.acknowledge": {
+      "sounds": [
+        {
+          "file": "sounds/IHearThat.mp3",
+          "label": "I hear that.",
+          "sha256": "4dfdc606a60e5bf974efc0a77af7aa49a51a7743f4168a06526d459f5299182c"
+        },
+        {
+          "file": "sounds/ImGone.mp3",
+          "label": "I'm gone.",
+          "sha256": "bc7260e59075882f39c8b81e3e841f6bf8ff5bb8d84020f7f795655540ae3df9"
+        },
+        {
+          "file": "sounds/NeverKnowWhatHitEm.mp3",
+          "label": "Never know what hit 'em.",
+          "sha256": "7c7cce116846f8ce8bb283db606645111b43f674882940483ad5bc4550f66454"
+        },
+        {
+          "file": "sounds/ImAllOverIt.mp3",
+          "label": "I'm all over it.",
+          "sha256": "d191c2773d34b28bf1987a02bdda70878caa904656548ce84bea29b29c0d406a"
+        }
+      ]
+    },
+    "task.complete": {
+      "sounds": [
+        {
+          "file": "sounds/GhostReportin.mp3",
+          "label": "Ghost reportin'.",
+          "sha256": "1af13c567249292bd2d0dc12f498d4f3a3b316519588dc73baebd859ee21d373"
+        },
+        {
+          "file": "sounds/CallTheShot.mp3",
+          "label": "Call the shot.",
+          "sha256": "a3e058b9ace1762697de82b63bea8313ac8ca210f5e32f8c228bbc5bb8be0d15"
+        }
+      ]
+    },
+    "task.error": {
+      "sounds": [
+        {
+          "file": "sounds/Death1.mp3",
+          "label": "Death 1",
+          "sha256": "0b8148840f421c9391b3341bcf87a1b04bc74863568a34d2d58d4649913c2498"
+        },
+        {
+          "file": "sounds/Death2.mp3",
+          "label": "Death 2",
+          "sha256": "66441868113576e1e17576dbd8a58ee545cf6662bf31b0771711be46bc24cf07"
+        }
+      ]
+    },
+    "input.required": {
+      "sounds": [
+        {
+          "file": "sounds/ImHere.mp3",
+          "label": "I'm here.",
+          "sha256": "cbd1009916bb4d982691634af2bb1743598a829c93bc712a9d69a2ff0d76b576"
+        },
+        {
+          "file": "sounds/Finally.mp3",
+          "label": "Finally.",
+          "sha256": "34e454b0e4499f161ca5d096eb680dd062e3189c4c1be9ac38060167cd1a44d5"
+        }
+      ]
+    },
+    "user.spam": {
+      "sounds": [
+        {
+          "file": "sounds/CalledDownTheThunder.mp3",
+          "label": "You called down the thunder...",
+          "sha256": "86db44af4d82ad20fcbbb76cbe15d57cada77c054e01f6778cf2cf2b9e140ba8"
+        },
+        {
+          "file": "sounds/ReapTheWhirlwind.mp3",
+          "label": "...now reap the whirlwind!",
+          "sha256": "ca16c6e0c989e82a51792b4b2bd5214ef85e5d9ebc0b87151818685604c73321"
+        },
+        {
+          "file": "sounds/KeepItUp.mp3",
+          "label": "Keep it up! I dare ya!",
+          "sha256": "8932def4175d8cead717eb7a5cb7e90778131c7a88698aab99a6d07e599358ab"
+        }
+      ]
+    },
+    "resource.limit": {
+      "sounds": [
+        {
+          "file": "sounds/OverloadAggressionInhibitors.mp3",
+          "label": "I'm about t' overload my aggression inhibitors!",
+          "sha256": "57c45061eecbbde59c3cfa4d8d8718a6a1932705025f32859f41423d72c894e2"
+        }
+      ]
+    }
+  }
+}

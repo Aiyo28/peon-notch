@@ -1,0 +1,159 @@
+{
+  "cesp_version": "1.0",
+  "name": "high_elf_builder_ru",
+  "display_name": "Строитель Высших Эльфов (Russian)",
+  "version": "1.1.0",
+  "description": "High Elf Builder voice lines from Warcraft III (Russian)",
+  "author": {
+    "name": "Ivan Efremov",
+    "github": "I194"
+  },
+  "license": "fair-use",
+  "language": "ru",
+  "icon": "icon.webp",
+  "categories": {
+    "session.start": {
+      "sounds": [
+        {
+          "file": "sounds/what_build.mp3",
+          "label": "Что будем строить?",
+          "sha256": "66814936af094a652bb26786c695dff197adce3af38e94fcb5641648e0cb758a"
+        }
+      ]
+    },
+    "task.acknowledge": {
+      "sounds": [
+        {
+          "file": "sounds/flatten.mp3",
+          "label": "Сравняю с землёй!",
+          "sha256": "9025725dd15fd951b7fb253487c1a954bc8788571d2510ac685361105402dcba"
+        },
+        {
+          "file": "sounds/blink_of_eye.mp3",
+          "label": "Не успеешь и глазом моргнуть!",
+          "sha256": "f674d1f0ae36b3c17a7e9b8f8d1d200235d1d3b806f9cef17b366f827e8d33e3"
+        },
+        {
+          "file": "sounds/boss_is_right.mp3",
+          "label": "Чтож, начальник всегда прав.",
+          "sha256": "e7615263fa6d73ffc573be29ab2b1c1494ccae0c4f5a712259fe9a2059307e39"
+        },
+        {
+          "file": "sounds/consider_done.mp3",
+          "label": "Да-да, считай что всё уже сделано.",
+          "sha256": "56a98a8eb1d2664aa4daac7792fb81468af7546f33dc58e5ea0308b10f48e83e"
+        },
+        {
+          "file": "sounds/zero_chance.mp3",
+          "label": "Вероятность успеха — ноль.",
+          "sha256": "516603a006486911d558fb46b4a930131d430c89a0a1cedacf9f5a605274540a"
+        },
+        {
+          "file": "sounds/we_build.mp3",
+          "label": "Мы строим, вы отдыхаете!",
+          "sha256": "cb19b2ed0967d2a17eab5497b45e17481824acfec8d9b352c32b7d00f383a803"
+        },
+        {
+          "file": "sounds/phase_inverter.mp3",
+          "label": "Всё очень просто! Берёшь гидравлический фазо-инвертор... Вуаля! Башня готова.",
+          "sha256": "fa9df064c42d2728c6782d7b8f76cf6d2e51a05e18d4a651abaa2dbc35c72087"
+        },
+        {
+          "file": "sounds/another_tower.mp3",
+          "label": "Хм... Ещё одна башня.",
+          "sha256": "cc28dd5ec0c065f278770e36243024c24a6973909f4b08cd78d9a2c1c4233a80"
+        }
+      ]
+    },
+    "task.complete": {
+      "sounds": [
+        {
+          "file": "sounds/voila.mp3",
+          "label": "Вуаля!",
+          "sha256": "4117e7726dafd73ff1e30c74a3e6c532f44f49593184055cf0c93ee7fca199d2"
+        },
+        {
+          "file": "sounds/tower_ready.mp3",
+          "label": "Башня готова.",
+          "sha256": "69051c74b7bff0e9bcdf2728daffb337f2000e319d480a9faa5536a8cec67db6"
+        }
+      ]
+    },
+    "task.error": {
+      "sounds": [
+        {
+          "file": "sounds/not_best_option.mp3",
+          "label": "Не лучший вариант.",
+          "sha256": "25cee9b9e1c467d262e16f6d31718c1e8918390b2d5d5f2f0dd34fe8764fad84"
+        },
+        {
+          "file": "sounds/you_sure.mp3",
+          "label": "Ты уверен?",
+          "sha256": "3c67c28cbbaf9789e8bb38469ea8c5c775b60966cfd32af04e4700830a9636b4"
+        },
+        {
+          "file": "sounds/stupid_idea.mp3",
+          "label": "Идиотская затея.",
+          "sha256": "982d75d38c749495eeb7fdab6b4655f0f8ca415004a773c8b7ea2d38f5e1625c"
+        },
+        {
+          "file": "sounds/wont_work.mp3",
+          "label": "Из этого ничего не выйдет.",
+          "sha256": "040bf5c86ed09ba60d4b1cad89a4c3b8abd4c32137bac62bd4113faee57c9424"
+        }
+      ]
+    },
+    "input.required": {
+      "sounds": [
+        {
+          "file": "sounds/formula.mp3",
+          "label": "Три икс в кубе плюс константа... ну что там?",
+          "sha256": "52ee9ce220be17b890ad61948fcb1757c74a4d5494cc690c6f44eb8a5a0f111f"
+        },
+        {
+          "file": "sounds/excuse_me.mp3",
+          "label": "Извини... что?",
+          "sha256": "80c3993445aae39d340b467885b713ed06407d0030fb4e74c2b0be096e8ee6c5"
+        },
+        {
+          "file": "sounds/not_in_blueprints.mp3",
+          "label": "В чертежах этого не было!",
+          "sha256": "80548fa9756d38fe33c9f51d1f031d51b991a484db203a635c33c17010d5ccb5"
+        }
+      ]
+    },
+    "resource.limit": {
+      "sounds": [
+        {
+          "file": "sounds/hourly_pay.mp3",
+          "label": "Слушай, я инженер, у меня оплата сдельная, так что не тяни время.",
+          "sha256": "0bb34b008a6f3448b69b46fe49bcdcca6c0bdac44d3628155b8dd53e31c9034f"
+        },
+        {
+          "file": "sounds/do_it_yourself.mp3",
+          "label": "Если дело такое срочное, может сам им займёшься?",
+          "sha256": "a5dcfe79af8b9d81da65b70cc46d560cbeee49d2d8f94eedcb3de0a42256c8f2"
+        }
+      ]
+    },
+    "user.spam": {
+      "sounds": [
+        {
+          "file": "sounds/stop_thinking.mp3",
+          "label": "Ты мешаешь мне думать.",
+          "sha256": "6b0cbef227cd16687486256ef9c0db27ed26e051dbc2a7bd5561da81da6c655b"
+        },
+        {
+          "file": "sounds/do_it_yourself.mp3",
+          "label": "Если дело такое срочное, может сам им займёшься?",
+          "sha256": "a5dcfe79af8b9d81da65b70cc46d560cbeee49d2d8f94eedcb3de0a42256c8f2"
+        },
+        {
+          "file": "sounds/click_someone_else.mp3",
+          "label": "Пощёлкай на ком-нибудь другом, ладно?",
+          "sha256": "0196880e02a3b53cc1d9f2163e75c25423efaf441db2395df3a0ea2e013297ce"
+        }
+      ]
+    }
+  }
+}

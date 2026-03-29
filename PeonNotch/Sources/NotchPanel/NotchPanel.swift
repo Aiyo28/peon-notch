@@ -154,7 +154,7 @@ class NotchViewModel: ObservableObject {
     private let rowHeight: CGFloat = 64
     private let topPadding: CGFloat = 40
 
-    private var openWidth: CGFloat { 420 }
+    private var openWidth: CGFloat { 540 }
 
     private var openHeight: CGFloat {
         let count = max(visibleCount, 1)
