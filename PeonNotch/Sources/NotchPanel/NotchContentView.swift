@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Root View (handles the notch shape + animation)
+// MARK: - Root View
 
 struct NotchRootView: View {
     @ObservedObject var viewModel: NotchViewModel
@@ -21,7 +21,6 @@ struct NotchRootView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // The notch pill — anchored to the top of the window
             notchBody
                 .frame(width: viewModel.notchWidth, height: viewModel.notchHeight)
                 .clipShape(NotchShape(topRadius: topRadius, bottomRadius: bottomRadius))
@@ -31,16 +30,23 @@ struct NotchRootView: View {
                 )
                 .onTapGesture {
                     withAnimation(viewModel.isOpen ? closeAnimation : openAnimation) {
-                        if viewModel.isOpen { viewModel.close() } else { viewModel.open() }
+                        if viewModel.isOpen {
+                            viewModel.close()
+                        } else {
+                            viewModel.open(sessionCount: sessionManager.sessions.count)
+                        }
                     }
                 }
-                .onHover { hovering in
-                    isHovering = hovering
-                }
+                .onHover { isHovering = $0 }
                 .animation(viewModel.isOpen ? openAnimation : closeAnimation, value: viewModel.notchWidth)
                 .animation(viewModel.isOpen ? openAnimation : closeAnimation, value: viewModel.notchHeight)
                 .animation(viewModel.isOpen ? openAnimation : closeAnimation, value: topRadius)
                 .animation(viewModel.isOpen ? openAnimation : closeAnimation, value: bottomRadius)
+                .onChange(of: sessionManager.sessions.count) { _, newCount in
+                    withAnimation(openAnimation) {
+                        viewModel.updateSize(sessionCount: newCount)
+                    }
+                }
 
             Spacer()
         }
@@ -50,7 +56,6 @@ struct NotchRootView: View {
 
     private var notchBody: some View {
         ZStack {
-            // Black background — blends with physical notch
             Color.black
 
             if viewModel.isOpen {
@@ -65,13 +70,12 @@ struct NotchRootView: View {
         }
     }
 
-    // MARK: - Collapsed (camouflaged as notch)
+    // MARK: - Collapsed
 
     private var collapsedContent: some View {
         HStack(spacing: 6) {
             if !sessionManager.sessions.isEmpty {
-                // Show tiny dots for each active session
-                ForEach(sessionManager.sessions.prefix(6)) { session in
+                ForEach(sessionManager.sessions.prefix(9)) { session in
                     Circle()
                         .fill(statusColor(for: session.status))
                         .frame(width: 6, height: 6)
@@ -84,54 +88,77 @@ struct NotchRootView: View {
     // MARK: - Expanded
 
     private var expandedContent: some View {
-        VStack(spacing: 12) {
-            // Header
-            HStack {
-                Text("Peon Notch")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.7))
-                Spacer()
-                Text("\(sessionManager.sessions.count) agent\(sessionManager.sessions.count == 1 ? "" : "s")")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-
+        VStack(spacing: 0) {
             if sessionManager.sessions.isEmpty {
                 emptyState
             } else {
-                sessionGrid
+                adaptiveLayout
             }
         }
+        .padding(.top, 8)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Image(systemName: "person.3.fill")
-                .font(.system(size: 28))
+                .font(.system(size: 22))
                 .foregroundStyle(.white.opacity(0.2))
             Text("No active sessions")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.white.opacity(0.4))
-            Text("Start a Claude Code session")
-                .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.25))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var sessionGrid: some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
-        return ScrollView {
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(sessionManager.sessions) { session in
-                    SessionCard(session: session)
+    /// Adaptive layout: horizontal row for 1-3, two rows for 4-6, grid for 7+
+    @ViewBuilder
+    private var adaptiveLayout: some View {
+        let sessions = Array(sessionManager.sessions.prefix(9))
+        let count = sessions.count
+
+        if count <= 3 {
+            // Single horizontal row — compact
+            HStack(spacing: 10) {
+                ForEach(sessions) { session in
+                    CompactCard(session: session)
                         .onTapGesture { onSessionClick(session) }
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .frame(maxHeight: .infinity)
+        } else if count <= 6 {
+            // Two rows of up to 3
+            let row1 = Array(sessions.prefix(3))
+            let row2 = Array(sessions.dropFirst(3))
+            VStack(spacing: 8) {
+                HStack(spacing: 10) {
+                    ForEach(row1) { session in
+                        CompactCard(session: session)
+                            .onTapGesture { onSessionClick(session) }
+                    }
+                }
+                HStack(spacing: 10) {
+                    ForEach(row2) { session in
+                        CompactCard(session: session)
+                            .onTapGesture { onSessionClick(session) }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .frame(maxHeight: .infinity)
+        } else {
+            // 7+ compact grid
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(sessions) { session in
+                        MiniCard(session: session)
+                            .onTapGesture { onSessionClick(session) }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
         }
     }
 
@@ -145,39 +172,79 @@ struct NotchRootView: View {
     }
 }
 
-// MARK: - Session Card
+// MARK: - Compact Card (1-6 agents, horizontal layout)
 
-struct SessionCard: View {
+struct CompactCard: View {
     let session: AgentSession
 
     var body: some View {
-        VStack(spacing: 6) {
+        HStack(spacing: 8) {
             Image(nsImage: CharacterRegistry.shared.portrait(for: session.character))
                 .resizable()
                 .interpolation(.none)
-                .frame(width: 56, height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .frame(width: 40, height: 40)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 6)
                         .strokeBorder(statusColor, lineWidth: 2)
                 )
 
+            VStack(alignment: .leading, spacing: 2) {
+                Text(session.character)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+
+                Text(session.message.isEmpty ? session.status.label : session.message)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(1)
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.white.opacity(0.08))
+        )
+    }
+
+    private var statusColor: Color {
+        switch session.status {
+        case .working: return .green
+        case .idle: return .gray
+        case .error: return .red
+        case .inputRequired: return .yellow
+        }
+    }
+}
+
+// MARK: - Mini Card (7+ agents, grid layout)
+
+struct MiniCard: View {
+    let session: AgentSession
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(nsImage: CharacterRegistry.shared.portrait(for: session.character))
+                .resizable()
+                .interpolation(.none)
+                .frame(width: 32, height: 32)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(statusColor, lineWidth: 1.5)
+                )
+
             Text(session.character)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 8, weight: .medium))
                 .foregroundStyle(.white)
                 .lineLimit(1)
-
-            Text(session.message.isEmpty ? session.status.label : session.message)
-                .font(.system(size: 9))
-                .foregroundStyle(.white.opacity(0.5))
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(6)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.08))
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.white.opacity(0.06))
         )
     }
 

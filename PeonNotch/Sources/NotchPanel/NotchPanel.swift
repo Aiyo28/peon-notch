@@ -69,7 +69,7 @@ class NotchPanel {
     }
 
     func expandBriefly(seconds: TimeInterval = 4) {
-        viewModel.open()
+        viewModel.open(sessionCount: sessionManager.sessions.count)
         autoCollapseTimer?.invalidate()
         autoCollapseTimer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self] _ in
             self?.viewModel.close()
@@ -126,11 +126,9 @@ class NotchViewModel: ObservableObject {
 
     let closedWidth: CGFloat
     let closedHeight: CGFloat
-    let openWidth: CGFloat = 580
-    let openHeight: CGFloat = 340
+    var sessionCount: Int = 0
 
     init(screen: NSScreen) {
-        // Match physical notch dimensions
         let leftPad = screen.auxiliaryTopLeftArea?.width ?? 0
         let rightPad = screen.auxiliaryTopRightArea?.width ?? 0
         closedWidth = screen.frame.width - leftPad - rightPad + 4
@@ -139,7 +137,29 @@ class NotchViewModel: ObservableObject {
         notchHeight = closedHeight
     }
 
-    func open() {
+    /// Adaptive sizing based on session count
+    private var openWidth: CGFloat {
+        switch sessionCount {
+        case 0:      return 300       // empty state — compact
+        case 1:      return 200       // single card
+        case 2:      return 340       // two cards side by side
+        case 3:      return 480       // three cards in a row
+        case 4...6:  return 480       // two rows of 3
+        default:     return 560       // 7+ grid
+        }
+    }
+
+    private var openHeight: CGFloat {
+        switch sessionCount {
+        case 0:      return 120       // empty state
+        case 1...3:  return 140       // single row
+        case 4...6:  return 250       // two rows
+        default:     return 340       // 3+ rows
+        }
+    }
+
+    func open(sessionCount: Int = 0) {
+        self.sessionCount = sessionCount
         isOpen = true
         notchWidth = openWidth
         notchHeight = openHeight
@@ -149,5 +169,12 @@ class NotchViewModel: ObservableObject {
         isOpen = false
         notchWidth = closedWidth
         notchHeight = closedHeight
+    }
+
+    func updateSize(sessionCount: Int) {
+        self.sessionCount = sessionCount
+        guard isOpen else { return }
+        notchWidth = openWidth
+        notchHeight = openHeight
     }
 }
