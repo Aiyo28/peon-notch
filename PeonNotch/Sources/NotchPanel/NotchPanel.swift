@@ -111,7 +111,24 @@ class NotchPanel {
     }
 
     private func focusTerminal(pid: Int32) {
-        guard let app = NSRunningApplication(processIdentifier: pid) else { return }
-        app.activate()
+        // The PID is the Claude Code process; find its parent terminal app
+        let app = NSRunningApplication(processIdentifier: pid)
+            ?? findParentTerminal(childPid: pid)
+        app?.activate()
+    }
+
+    private func findParentTerminal(childPid: Int32) -> NSRunningApplication? {
+        // Walk up the process tree to find Warp, Terminal, or iTerm
+        let terminalBundleIDs = [
+            "dev.warp.Warp-Stable",
+            "com.apple.Terminal",
+            "com.googlecode.iterm2",
+        ]
+        for bundleID in terminalBundleIDs {
+            if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first {
+                return app
+            }
+        }
+        return nil
     }
 }

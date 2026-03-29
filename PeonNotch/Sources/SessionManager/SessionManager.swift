@@ -84,6 +84,8 @@ class SessionManager: ObservableObject {
             updateSession(id: sessionID, status: .working, message: message)
         }
 
+        SoundEngine.shared.play(event: event, character: sessions.first(where: { $0.id == sessionID })?.character ?? character)
+
         NotificationCenter.default.post(
             name: Self.sessionUpdatedNotification,
             object: nil,

@@ -58,21 +58,15 @@ struct SessionCard: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            // Portrait placeholder — will be replaced with actual images in #3
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(statusColor.opacity(0.2))
-                    .frame(width: 64, height: 64)
-
-                Text(session.character.prefix(2).uppercased())
-                    .font(.system(size: 24, weight: .bold, design: .monospaced))
-                    .foregroundStyle(statusColor)
-
-                // Status border
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(statusColor, lineWidth: 2)
-                    .frame(width: 64, height: 64)
-            }
+            Image(nsImage: CharacterRegistry.shared.portrait(for: session.character))
+                .resizable()
+                .interpolation(.none)
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(statusColor, lineWidth: 2)
+                )
 
             Text(session.character)
                 .font(.system(size: 10, weight: .medium))
