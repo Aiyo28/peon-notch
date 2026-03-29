@@ -24,28 +24,38 @@ struct CharactersSettingsView: View {
                                 .foregroundStyle(.white.opacity(0.6))
                                 .padding(.leading, 4)
 
-                            LazyVGrid(columns: columns, spacing: 12) {
-                                ForEach(packs) { pack in
-                                    PackCard(
-                                        pack: pack,
-                                        isSelected: selectedPack == pack.id,
-                                        isDefault: AppSettings.shared.defaultCharacter == pack.id
-                                    )
-                                    .onTapGesture {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                            selectedPack = selectedPack == pack.id ? nil : pack.id
+                            // Build rows of 3 manually so we can insert detail panel after the right row
+                            let rows = stride(from: 0, to: packs.count, by: 3).map {
+                                Array(packs[$0..<min($0 + 3, packs.count)])
+                            }
+
+                            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                                HStack(spacing: 12) {
+                                    ForEach(row) { pack in
+                                        PackCard(
+                                            pack: pack,
+                                            isSelected: selectedPack == pack.id,
+                                            isDefault: AppSettings.shared.defaultCharacter == pack.id
+                                        )
+                                        .onTapGesture {
+                                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                                selectedPack = selectedPack == pack.id ? nil : pack.id
+                                            }
+                                        }
+                                    }
+                                    // Fill empty slots in last row
+                                    if row.count < 3 {
+                                        ForEach(0..<(3 - row.count), id: \.self) { _ in
+                                            Color.clear.frame(maxWidth: .infinity, minHeight: 150)
                                         }
                                     }
                                 }
-                            }
 
-                            // Detail panel appears below the category grid
-                            if let selectedPack, packs.contains(where: { $0.id == selectedPack }) {
-                                PackDetailView(packID: selectedPack)
-                                    .transition(.asymmetric(
-                                        insertion: .push(from: .top).combined(with: .opacity),
-                                        removal: .opacity
-                                    ))
+                                // Detail panel right below this row if selected pack is in it
+                                if let selectedPack, row.contains(where: { $0.id == selectedPack }) {
+                                    PackDetailView(packID: selectedPack)
+                                        .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
+                                }
                             }
                         }
                     }
