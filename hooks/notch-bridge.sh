@@ -63,6 +63,7 @@ done
     --session "$session_id" \
     --event "$notch_event" \
     --pid "$CLAUDE_PID" \
-    --message "$display_message" &
+    --message "$display_message" \
+    --cwd "${cwd:-}" &
 
 exit 0

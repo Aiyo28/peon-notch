@@ -93,6 +93,10 @@ struct PackDetailView: View {
     @State private var player: AVAudioPlayer?
     @State private var playingFile: String?
 
+    private var isCurrentDefault: Bool {
+        AppSettings.shared.defaultCharacter == packID
+    }
+
     private var packDir: String {
         NSHomeDirectory() + "/Documents/Developer/peon-notch/characters/\(packID)"
     }
@@ -143,12 +147,12 @@ struct PackDetailView: View {
                 }
                 Spacer()
 
-                Button("Set as Default") {
+                Button(isCurrentDefault ? "Default" : "Set as Default") {
                     AppSettings.shared.defaultCharacter = packID
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .disabled(AppSettings.shared.defaultCharacter == packID)
+                .disabled(isCurrentDefault)
             }
 
             if categories.isEmpty {

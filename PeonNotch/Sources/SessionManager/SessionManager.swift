@@ -20,8 +20,10 @@ struct AgentSession: Identifiable, Equatable {
     let id: String          // session ID
     let pid: Int32          // terminal process ID
     var character: String   // character pack name
+    var displayName: String // user-editable label
     var status: AgentStatus
     var message: String
+    var cwd: String         // working directory
     var lastUpdated: Date
 
     static func == (lhs: AgentSession, rhs: AgentSession) -> Bool {
@@ -42,21 +44,44 @@ class SessionManager: ObservableObject {
         startHeartbeat()
     }
 
-    func handleEvent(sessionID: String, event: String, character: String, pid: Int32, message: String) {
+    func handleEvent(sessionID: String, event: String, character: String, pid: Int32, message: String, cwd: String = "") {
         DispatchQueue.main.async { [weak self] in
-            self?.processEvent(sessionID: sessionID, event: event, character: character, pid: pid, message: message)
+            self?.processEvent(sessionID: sessionID, event: event, character: character, pid: pid, message: message, cwd: cwd)
         }
     }
 
-    private func processEvent(sessionID: String, event: String, character: String, pid: Int32, message: String) {
+    func updateCharacter(sessionID: String, character: String) {
+        guard let index = sessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        sessions[index].character = character
+    }
+
+    func renameSession(sessionID: String, name: String) {
+        guard let index = sessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        sessions[index].displayName = name
+    }
+
+    private func processEvent(sessionID: String, event: String, character: String, pid: Int32, message: String, cwd: String) {
         switch event {
         case "session.start":
+            let available = CharacterRegistry.shared.availableNames()
+            let resolved: (name: String, character: String)
+            if !character.isEmpty {
+                let projectName = cwd.isEmpty ? character : URL(fileURLWithPath: cwd).lastPathComponent
+                resolved = (projectName, character)
+            } else if !cwd.isEmpty {
+                resolved = AppSettings.shared.resolveSession(cwd: cwd, available: available)
+            } else {
+                resolved = ("Session", AppSettings.shared.nextCharacter(available: available))
+            }
+
             let session = AgentSession(
                 id: sessionID,
                 pid: pid,
-                character: character.isEmpty ? AppSettings.shared.nextCharacter(available: CharacterRegistry.shared.availableNames()) : character,
+                character: resolved.character,
+                displayName: resolved.name,
                 status: .working,
                 message: message,
+                cwd: cwd,
                 lastUpdated: Date()
             )
             if let index = sessions.firstIndex(where: { $0.id == sessionID }) {

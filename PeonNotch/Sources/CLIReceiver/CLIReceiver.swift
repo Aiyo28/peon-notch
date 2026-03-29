@@ -21,6 +21,7 @@ class CLIReceiver {
         let character = info["character"] as? String ?? ""
         let pid = (info["pid"] as? Int).map { Int32($0) } ?? 0
         let message = info["message"] as? String ?? ""
+        let cwd = info["cwd"] as? String ?? ""
 
         guard !sessionID.isEmpty, !event.isEmpty else { return }
 
@@ -29,7 +30,8 @@ class CLIReceiver {
             event: event,
             character: character,
             pid: pid,
-            message: message
+            message: message,
+            cwd: cwd
         )
     }
 }

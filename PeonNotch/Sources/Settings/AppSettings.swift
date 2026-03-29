@@ -1,10 +1,12 @@
 import Foundation
 
-class AppSettings {
+class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
     private let settingsPath: String
     private var data: SettingsData
+
+    static let didChangeNotification = Notification.Name("AppSettings.didChange")
 
     private init() {
         let configDir = NSHomeDirectory() + "/.config/peon-notch"
@@ -38,21 +40,64 @@ class AppSettings {
         set { data.heartbeatInterval = newValue; save() }
     }
 
-    /// Returns the next character to assign, based on rotation mode
+    /// Category filter for rotation — only rotate through these categories
+    var rotationCategories: Set<String> {
+        get { Set(data.rotationCategories) }
+        set { data.rotationCategories = Array(newValue).sorted(); save() }
+    }
+
+    /// Folder-to-character mapping: cwd path → (name, character)
+    var folderMappings: [String: FolderMapping] {
+        get { data.folderMappings }
+        set { data.folderMappings = newValue; save() }
+    }
+
+    /// Returns the next character to assign, based on rotation mode + category filter
     func nextCharacter(available: [String]) -> String {
         guard !available.isEmpty else { return defaultCharacter }
+
+        // Filter by category if any categories are selected
+        let filtered: [String]
+        if rotationCategories.isEmpty {
+            filtered = available
+        } else {
+            filtered = available.filter { name in
+                guard let pack = CharacterRegistry.shared.packs[name] else { return false }
+                return rotationCategories.contains(pack.category.rawValue)
+            }
+        }
+        let pool = filtered.isEmpty ? available : filtered
 
         switch characterRotation {
         case .fixed:
             return defaultCharacter
         case .sequential:
-            let idx = data.rotationIndex % available.count
+            let idx = data.rotationIndex % pool.count
             data.rotationIndex += 1
             save()
-            return available[idx]
+            return pool[idx]
         case .random:
-            return available.randomElement() ?? defaultCharacter
+            return pool.randomElement() ?? defaultCharacter
         }
+    }
+
+    /// Resolve character and name for a given cwd
+    func resolveSession(cwd: String, available: [String]) -> (name: String, character: String) {
+        // Check folder mappings
+        for (path, mapping) in folderMappings {
+            if cwd.hasPrefix(path) || cwd.hasSuffix(path) {
+                return (mapping.displayName, mapping.character)
+            }
+        }
+        // Try to extract project name from cwd
+        let projectName = URL(fileURLWithPath: cwd).lastPathComponent
+        let character = nextCharacter(available: available)
+        return (projectName, character)
+    }
+
+    func setFolderMapping(path: String, name: String, character: String) {
+        data.folderMappings[path] = FolderMapping(displayName: name, character: character)
+        save()
     }
 
     private func save() {
@@ -61,13 +106,20 @@ class AppSettings {
         if let raw = try? JSONEncoder().encode(data) {
             try? raw.write(to: URL(fileURLWithPath: settingsPath))
         }
+        objectWillChange.send()
+        NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
     }
 }
 
-enum CharacterRotation: String, Codable {
+enum CharacterRotation: String, Codable, CaseIterable {
     case fixed
     case sequential
     case random
+}
+
+struct FolderMapping: Codable {
+    var displayName: String
+    var character: String
 }
 
 struct SettingsData: Codable {
@@ -76,4 +128,6 @@ struct SettingsData: Codable {
     var characterRotation: CharacterRotation = .random
     var heartbeatInterval: TimeInterval = 30
     var rotationIndex: Int = 0
+    var rotationCategories: [String] = []
+    var folderMappings: [String: FolderMapping] = [:]
 }

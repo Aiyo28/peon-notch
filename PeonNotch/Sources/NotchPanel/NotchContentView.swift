@@ -154,58 +154,109 @@ struct NotchRootView: View {
 struct SessionRow: View {
     let session: AgentSession
     @State private var isHovered = false
+    @State private var isEditing = false
+    @State private var editName: String = ""
+    @State private var editCharacter: String = ""
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Portrait
-            Image(nsImage: CharacterRegistry.shared.portrait(for: session.character))
-                .resizable()
-                .interpolation(.none)
-                .frame(width: 44, height: 44)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(statusColor, lineWidth: 2)
-                )
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Image(nsImage: CharacterRegistry.shared.portrait(for: session.character))
+                    .resizable()
+                    .interpolation(.none)
+                    .frame(width: 44, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(statusColor, lineWidth: 2)
+                    )
 
-            // Name + status
-            VStack(alignment: .leading, spacing: 2) {
-                Text(CharacterRegistry.shared.packs[session.character]?.name ?? session.character.capitalized)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(session.displayName)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white)
 
-                Text(session.message.isEmpty ? session.status.label : session.message)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .lineLimit(1)
+                    Text(session.message.isEmpty ? session.status.label : session.message)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                if isHovered {
+                    Button(action: {
+                        editName = session.displayName
+                        editCharacter = session.character
+                        withAnimation(.easeOut(duration: 0.2)) { isEditing.toggle() }
+                    }) {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                }
+
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(statusColor)
+                        .frame(width: 7, height: 7)
+                    Text(session.status.label)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(statusColor)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(statusColor.opacity(0.15)))
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
 
-            Spacer()
+            // Inline edit panel
+            if isEditing {
+                VStack(spacing: 8) {
+                    HStack {
+                        TextField("Name", text: $editName)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(size: 12))
+                            .onSubmit { applyChanges() }
 
-            // Status pill
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(statusColor)
-                    .frame(width: 7, height: 7)
-                Text(session.status.label)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(statusColor)
+                        Picker("", selection: $editCharacter) {
+                            ForEach(CharacterRegistry.shared.availableNames(), id: \.self) { name in
+                                HStack {
+                                    Image(nsImage: CharacterRegistry.shared.portrait(for: name))
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
+                                    Text(CharacterRegistry.shared.packs[name]?.name ?? name)
+                                }
+                                .tag(name)
+                            }
+                        }
+                        .frame(width: 150)
+
+                        Button("Apply") { applyChanges() }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(statusColor.opacity(0.15))
-            )
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(.white.opacity(isHovered ? 0.12 : 0.07))
         )
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.15), value: isHovered)
+    }
+
+    private func applyChanges() {
+        SessionManager.shared.renameSession(sessionID: session.id, name: editName)
+        SessionManager.shared.updateCharacter(sessionID: session.id, character: editCharacter)
+        withAnimation { isEditing = false }
     }
 
     private var statusColor: Color {
