@@ -1,9 +1,12 @@
 # Next
 
 ## Continue
-- Phase 1 MVP complete — notch UI, portraits, sounds, hooks all working
+- **BUG: Edit panel in notch gets cut off** — notch doesn't expand tall enough when editing. Need to wire `isEditingSession` to notch height recalculation
+- **BUG: Dead sessions still showing** — verify 10s heartbeat is actually removing closed Claude Code sessions
 - Disable peon-ping hooks when ready to fully switch (currently both play sounds)
-- Phase 2: Settings UI, more character packs, auto-update
+- Wire Notification settings toggles to actually control notch expansion behavior
+- Right-click menu bar icon → "Settings..." shortcut
+- Clean up duplicate packs (grunt/wc3_grunt, marine/sc_marine)
 
 ## Decide
 - When to disable peon-ping and go fully Peon Notch
