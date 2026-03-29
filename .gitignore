@@ -1,0 +1,10 @@
+.vault-cache/
+.DS_Store
+*.xcuserdata
+xcuserdata/
+DerivedData/
+build/
+.build/
+*.swp
+*.swo
+.env
