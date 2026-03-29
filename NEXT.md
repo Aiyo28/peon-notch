@@ -1,14 +1,13 @@
 # Next
 
 ## Continue
-- All Phase 1 modules built and compiling — test the app visually
-- Run: `.build/debug/PeonNotch &` then send test events via `notch-update`
-- Source WC3/SC portrait PNGs for character packs (peon, grunt, marine dirs exist but empty)
-- Add sound files to character packs (characters/{name}/sounds/{event}.wav)
-- Wire hooks into Claude Code settings.json (see hooks/INSTALL.md)
+- Phase 1 MVP complete — notch UI, portraits, sounds, hooks all working
+- Disable peon-ping hooks when ready to fully switch (currently both play sounds)
+- Phase 2: Settings UI, more character packs, auto-update
 
 ## Decide
-- Portrait asset sourcing strategy (game extract vs fan art vs AI-generated)
+- When to disable peon-ping and go fully Peon Notch
+- Blizzard fan content policy review before public release
 
 ## Blocked
 - Nothing pending

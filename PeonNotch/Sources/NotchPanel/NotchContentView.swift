@@ -80,13 +80,27 @@ struct NotchRootView: View {
 
     private var expandedContent: some View {
         VStack(spacing: 0) {
+            // Header with gear icon
+            HStack {
+                Spacer()
+                Button(action: { SettingsWindowController.shared.show() }) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 4)
+                .padding(.top, 2)
+            }
+            .padding(.top, 30)
+            .padding(.horizontal, 16)
+
             if visibleSessions.isEmpty {
                 emptyState
             } else {
                 sessionList
             }
         }
-        .padding(.top, 36)
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
     }
