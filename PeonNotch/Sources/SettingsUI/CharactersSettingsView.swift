@@ -70,6 +70,18 @@ struct PackCard: View {
 
     var body: some View {
         VStack(spacing: 6) {
+            // DEFAULT tag above portrait
+            if isDefault {
+                Text("DEFAULT")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.green)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(.green.opacity(0.15)))
+            } else {
+                Color.clear.frame(height: 16)
+            }
+
             Image(nsImage: pack.portrait)
                 .resizable()
                 .interpolation(.none)
@@ -84,15 +96,6 @@ struct PackCard: View {
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.white)
                 .lineLimit(1)
-
-            if isDefault {
-                Text("DEFAULT")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(.green)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(.green.opacity(0.15)))
-            }
 
             Button(action: {
                 SoundEngine.shared.play(event: "session.start", character: pack.id)
