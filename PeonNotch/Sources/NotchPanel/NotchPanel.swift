@@ -5,18 +5,19 @@ class NotchPanel {
     private let panel: NSPanel
     private let sessionManager: SessionManager
     private let screen: NSScreen
-    private var isExpanded = false
+    private let viewModel: NotchViewModel
     private var autoCollapseTimer: Timer?
-
-    private let collapsedHeight: CGFloat = 8
-    private let expandedHeight: CGFloat = 320
-    private let panelWidth: CGFloat = 380
 
     init(on screen: NSScreen, sessionManager: SessionManager) {
         self.screen = screen
         self.sessionManager = sessionManager
+        self.viewModel = NotchViewModel(screen: screen)
 
-        let frame = NSRect(x: 0, y: 0, width: panelWidth, height: collapsedHeight)
+        // Large fixed window — SwiftUI handles the visible size via clip shape
+        let windowWidth: CGFloat = 640
+        let windowHeight: CGFloat = 400
+        let frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+
         panel = NSPanel(
             contentRect: frame,
             styleMask: [.nonactivatingPanel, .fullSizeContentView, .borderless],
@@ -25,22 +26,27 @@ class NotchPanel {
         )
 
         panel.isFloatingPanel = true
-        panel.level = .statusBar + 1
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+        panel.level = NSWindow.Level(Int(CGShieldingWindowLevel()))
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        panel.hasShadow = false
         panel.isMovableByWindowBackground = false
         panel.titlebarAppearsTransparent = true
         panel.titleVisibility = .hidden
+        panel.appearance = NSAppearance(named: .darkAqua)
 
-        let contentView = NotchContentView(sessionManager: sessionManager, onSessionClick: { [weak self] session in
-            self?.focusTerminal(pid: session.pid)
-            self?.collapse()
-        })
+        let contentView = NotchRootView(
+            viewModel: viewModel,
+            sessionManager: sessionManager,
+            onSessionClick: { [weak self] session in
+                self?.focusTerminal(pid: session.pid)
+                self?.viewModel.close()
+            }
+        )
         panel.contentView = NSHostingView(rootView: contentView)
 
-        positionAtNotch(expanded: false)
+        positionWindow()
         panel.orderFrontRegardless()
 
         NotificationCenter.default.addObserver(
@@ -49,41 +55,24 @@ class NotchPanel {
             name: SessionManager.sessionUpdatedNotification,
             object: nil
         )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(screenChanged),
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
     }
 
     func toggle() {
-        if isExpanded { collapse() } else { expand() }
-    }
-
-    func expand() {
-        guard !isExpanded else { return }
-        isExpanded = true
-        autoCollapseTimer?.invalidate()
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.3
-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            positionAtNotch(expanded: true, animated: true)
-        }
-    }
-
-    func collapse() {
-        guard isExpanded else { return }
-        isExpanded = false
-        autoCollapseTimer?.invalidate()
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.25
-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            positionAtNotch(expanded: false, animated: true)
-        }
+        if viewModel.isOpen { viewModel.close() } else { viewModel.open() }
     }
 
     func expandBriefly(seconds: TimeInterval = 4) {
-        expand()
+        viewModel.open()
         autoCollapseTimer?.invalidate()
         autoCollapseTimer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self] _ in
-            self?.collapse()
+            self?.viewModel.close()
         }
     }
 
@@ -94,31 +83,26 @@ class NotchPanel {
         }
     }
 
-    private func positionAtNotch(expanded: Bool, animated: Bool = false) {
-        let notchWidth = screen.notchWidth
-        let width = max(panelWidth, notchWidth + 40)
-        let height = expanded ? expandedHeight : collapsedHeight
+    @objc private func screenChanged() {
+        positionWindow()
+    }
 
-        let x = screen.frame.midX - width / 2
-        let y = screen.frame.maxY - height - screen.notchHeight
-
-        let frame = NSRect(x: x, y: y, width: width, height: height)
-        if animated {
-            panel.animator().setFrame(frame, display: true)
-        } else {
-            panel.setFrame(frame, display: true)
-        }
+    private func positionWindow() {
+        let screenFrame = screen.frame
+        let windowWidth: CGFloat = 640
+        let windowHeight: CGFloat = 400
+        let x = screenFrame.origin.x + (screenFrame.width / 2) - windowWidth / 2
+        let y = screenFrame.origin.y + screenFrame.height - windowHeight
+        panel.setFrame(NSRect(x: x, y: y, width: windowWidth, height: windowHeight), display: true)
     }
 
     private func focusTerminal(pid: Int32) {
-        // The PID is the Claude Code process; find its parent terminal app
         let app = NSRunningApplication(processIdentifier: pid)
             ?? findParentTerminal(childPid: pid)
         app?.activate()
     }
 
     private func findParentTerminal(childPid: Int32) -> NSRunningApplication? {
-        // Walk up the process tree to find Warp, Terminal, or iTerm
         let terminalBundleIDs = [
             "dev.warp.Warp-Stable",
             "com.apple.Terminal",
@@ -130,5 +114,40 @@ class NotchPanel {
             }
         }
         return nil
+    }
+}
+
+// MARK: - ViewModel
+
+class NotchViewModel: ObservableObject {
+    @Published var isOpen = false
+    @Published var notchWidth: CGFloat
+    @Published var notchHeight: CGFloat
+
+    let closedWidth: CGFloat
+    let closedHeight: CGFloat
+    let openWidth: CGFloat = 580
+    let openHeight: CGFloat = 340
+
+    init(screen: NSScreen) {
+        // Match physical notch dimensions
+        let leftPad = screen.auxiliaryTopLeftArea?.width ?? 0
+        let rightPad = screen.auxiliaryTopRightArea?.width ?? 0
+        closedWidth = screen.frame.width - leftPad - rightPad + 4
+        closedHeight = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : 38
+        notchWidth = closedWidth
+        notchHeight = closedHeight
+    }
+
+    func open() {
+        isOpen = true
+        notchWidth = openWidth
+        notchHeight = openHeight
+    }
+
+    func close() {
+        isOpen = false
+        notchWidth = closedWidth
+        notchHeight = closedHeight
     }
 }
