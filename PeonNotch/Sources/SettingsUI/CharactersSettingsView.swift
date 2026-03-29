@@ -103,7 +103,7 @@ struct PackCard: View {
             }
             .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 150)
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 12)
